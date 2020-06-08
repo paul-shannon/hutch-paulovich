@@ -11,11 +11,16 @@ dim(tbl.numa)
 # coi.area <- grep("area", colnames(tbl.numa), ignore.case=TRUE,v=T)       # "Area"          "Area.Ratio" "Total.Area"
 # coi.ratio <- grep("Ratio", colnames(tbl.numa), ignore.case=FALSE,v=T)     #  "Area.Ratio"  "Ratio.To.Standard"
 
-coi <- c("Protein.Name", "SampleVariable1", "Area.Ratio", "Ratio.To.Standard", "Replicate", "Total.Area", "SampleVariable2")
+coi <- c("Protein.Name", "Peptide.Modified.Sequence", "Transition",
+         "Replicate.Name", "SampleVariable1",
+         "Area.Ratio", "Ratio.To.Standard", "Total.Area",
+         "Isotope.Label.Type", "Retention.Time", "DotProductLightToHeavy", "Area", "Max.Height")
 tbl.numa <- tbl.numa[, coi]
+dim(tbl.numa)  # 686 13
 full.name <- tbl.numa$Protein.Name
 geneSymbol <- sub("_HUMAN", "", unlist(lapply(strsplit(full.name, "\\|"), "[", 3)))
 tbl.numa$geneSymbol  <- geneSymbol
+dim(tbl.numa)  # 686 14
 
 #----------------------------------------------------------------------------------------------------
 # 2,5, 10 Gy: radiation measure, the gray is the unit of absorbed dose and has replaced the rad.
@@ -80,26 +85,136 @@ test_parseSampleName <- function()
 
 } # test_parseSampleName
 #----------------------------------------------------------------------------------------------------
-dim(tbl.numa)
+dim(tbl.numa) # 686 14
 sampleNames <- tbl.numa$SampleVariable1
 
 tbl.parsed <- do.call(rbind, lapply(sampleNames, parseSampleName))
 
-tbl.x <- cbind(tbl.numa[, c(1,3,4,6,8,2)], tbl.parsed)
+dim(tbl.numa)
+dim(tbl.parsed)
+tbl.x <- cbind(tbl.numa, tbl.parsed)
 
-preferred.column.order <- c(
- "geneSymbol",
- "Protein.Name",
- "cellType",
- "treatment",
- "radiation",
- "time",
- "rep",
- "Area.Ratio",
- "Ratio.To.Standard",
- "Total.Area",
- "SampleVariable1")
-tbl.numa <- tbl.x[, preferred.column.order]
-save(tbl.numa, file="tbl.numa.RData")
+coi <-  c(
+    "geneSymbol",
+    "treatment",
+    "radiation",
+    "time",
+    "Transition",
+    "rep",
+    "Peptide.Modified.Sequence",
+    "Area.Ratio",
+    "Ratio.To.Standard",
+    "Total.Area",
+    "Isotope.Label.Type",
+    "Retention.Time",
+    "DotProductLightToHeavy",
+    "Area",
+    "Max.Height",
+    "Protein.Name",
+    "Replicate.Name",
+    "SampleVariable1",
+    "cellType")
 
+tbl.numa <- tbl.x[, coi]
+dim(tbl.numa) # 686 14
+
+tbl.numaLight <- subset(tbl.numa, Isotope.Label.Type=="light")
+tbl.numaLight <- subset(tbl.numaLight, cellType == "LCL57")
+rownames(tbl.numaLight) <- NULL
+dim(tbl.numaLight)  # 343 19
+
+sampleNames <- c("LCL57_1Gy",
+                 "LCL57_2Gy",
+                 "LCL57_5Gy",
+                 "LCL57_10Gy",
+                 "LCL57_ATMi_mock",
+                 "LCL57_ATMi_5Gy",
+                 "LCL57_DMSO_mock",
+                 "LCL57_DMSO_5Gy",
+                 "LCL57_mock")
+
+groupName <- rep("untreated", nrow(tbl.numaLight))
+groupName[grep("LCL57_1Gy", tbl.numaLight$SampleVariable1)] <- "untreated_1Gy"
+groupName[grep("LCL57_2Gy", tbl.numaLight$SampleVariable1)] <- "untreated_2Gy"
+groupName[grep("LCL57_5Gy", tbl.numaLight$SampleVariable1)] <- "untreated_5Gy"
+groupName[grep("LCL57_10Gy", tbl.numaLight$SampleVariable1)] <- "untreated_10Gy"
+
+groupName[grep("LCL57_ATMi_mock", tbl.numaLight$SampleVariable1)] <- "ATMi_mock"
+groupName[grep("LCL57_ATMi_5Gy", tbl.numaLight$SampleVariable1)] <- "ATMi_5Gy"
+groupName[grep("LCL57_DMSO_mock", tbl.numaLight$SampleVariable1)] <- "DMSO_mock"
+groupName[grep("LCL57_DMSO_5Gy", tbl.numaLight$SampleVariable1)] <- "DMSO_5Gy"
+groupName[grep("LCL57_mock", tbl.numaLight$SampleVariable1)] <- "mock"
+
+tbl.numaLight$group <- groupName
+dim(tbl.numaLight) # 315 20
+
+wdth(20); colnames(tbl.numaLight); wdth(120)
+
+coi <- c(
+"geneSymbol",
+"group",
+"treatment",
+"radiation",
+"time",
+"Transition",
+"rep",
+"Total.Area",
+"Area",
+"Max.Height",
+"Peptide.Modified.Sequence",
+"Area.Ratio",
+"Ratio.To.Standard",
+"Isotope.Label.Type",
+"Retention.Time",
+"DotProductLightToHeavy",
+"Protein.Name",
+"Replicate.Name",
+"SampleVariable1",
+"cellType")
+
+tbl.numaLight$Area.Ratio <- as.numeric(tbl.numaLight$Area.Ratio)
+
+save(tbl.numaLight, file="tbl.numa.RData")
+
+
+
+
+
+
+
+# preferred.column.order <- c("transition", "treatment", "radiation", "time", "rep",
+#                             "totalArea", "retentionTime",
+#                             "gene", "protein", "sequence", "cellType", "label",
+#                             "ratioToStandard", "sampleName", "group")
+#
+# tbl.numaLight <- tbl.numaLight[, preferred.column.order]
+# save(tbl.numa, tbl.numaLight, file="tbl.numa.RData")
+#
+#
+# varNames <- grep("LCL57", tbl.numaLight$sampleName, v=T)
+# varNames.2 <- unique(sub("Hr_Rep.*$", "", varNames))
+#
+# varNames <- grep("LCL57", tbl.numa$SampleVariable1, v=T)
+# length(varNames.2)
+# # remove trailing time values: 1, 0.25, 6, 24
+#
+#
+#
+#
+# sort(unique(c(
+# "LCL57_5Gy",
+# "LCL57_ATMi_5Gy",
+# "LCL57_DMSO_mock",
+# "LCL57_ATMi_5Gy",
+# "LCL57_ATMi_mock",
+# "LCL57_10Gy",
+# "LCL57_DMSO_5Gy",
+# "LCL57_2Gy",
+# "LCL57_DMSO_5Gy",
+# "LCL57_1Gy",
+# "LCL57_ATMi_5Gy",
+# "LCL57_ATMi_5Gy",
+# "LCL57_mock",
+# "LCL57_DMSO_5Gy",
+# "LCL57_DMSO_5Gy")))
 
