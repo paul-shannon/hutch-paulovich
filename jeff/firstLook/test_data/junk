@@ -1,0 +1,6 @@
+git add firstApp.R
+git add numa.R
+git add Dockerfile
+git add installPrerequisites.R
+git add makefile
+git add tbl.numa.RData
