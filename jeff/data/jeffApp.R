@@ -19,8 +19,7 @@ ui.dashboard <- dashboardPage(
       selectInput("selectAnalyte",
                   label="Choose Analyte",
                   c(" - ", analytes),
-                  selectize=FALSE,
-                  size=40
+                  selectize=TRUE
                   ),
     sidebarMenuOutput("menu")
     ),
@@ -45,7 +44,7 @@ server <- function(input, output, session)
 displayAnalyteDataByExperiment <- function(analyte.name)
 {
    tbl.sub <- subset(tbl, analyte==analyte.name) # [, coi] #  & groupName==exoi.01)[, coi]
-   experiment.groups <- sort(unique(tbl.sub$experiment))
+   experiment.groups <- sort(unique(tbl.sub$group))
    if(length(experiment.groups) == 0){
        printf("no experiments for analyte '%s'", analyte.name)
        return()
@@ -54,14 +53,16 @@ displayAnalyteDataByExperiment <- function(analyte.name)
    print(experiment.groups)
 
    removeUI("#temporaryDiv")
+   insertUI("#plotBoxDiv", "beforeEnd", div(id="temporaryDiv"))
 
-   for(experiment.name in experiment.groups){
+   for(experiment.group in experiment.groups){
      coi <- c("time", "experiment", "radiation", "area", "sd")
-     tbl.exp <- subset(tbl.sub, experiment==experiment.name)[, coi]
-     tbl.exp
-     box.title <- sprintf("%s: %s", analyte.name, experiment.name)
-     box.id <- sprintf("%s-%s", analyte.name, experiment.name)
-     insertUI("#plotBoxDiv", "beforeEnd", div(id="temporaryDiv"))
+     tbl.exp <- subset(tbl.sub, group==experiment.group)[, coi]
+     printf("--- displaying %s in %s, %d rows", analyte.name, experiment.group, nrow(tbl.exp))
+     if(nrow(tbl.exp) == 0) break;
+     box.title <- sprintf("%s: %s", analyte.name, experiment.group)
+     box.id <- sprintf("%s-%s", analyte.name, experiment.group)
+     printf("--- calling insertUI, for %s, %s", analyte.name, experiment.group)
      insertUI("#temporaryDiv", "beforeEnd",
               box(ExperimentalMeasuresUI(id=box.id, title=box.title, boxWidth=400),
                   title=box.title,

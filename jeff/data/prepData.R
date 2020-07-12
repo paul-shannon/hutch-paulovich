@@ -410,8 +410,36 @@ createWebAppReadyDataFrame <- function()
    head(tbl.123)
    length(unique(tbl.123$analyte))  # 39
    tbl <- tbl.123
+   group <- rep("none", nrow(tbl))
+   atmi.pure <- grep("ATMi", tbl$experiment)
+   atmi.mixed <- sort(c(grep("atmi.minus", tbl$experiment), grep("atmi.plus", tbl$experiment)))
+   atri.mixed <- sort(c(grep("atri.minus", tbl$experiment), grep("atri.plus", tbl$experiment)))
+   dmso.pure <- grep("DMSO", tbl$experiment)
+   dmso.mixed <- sort(c(grep("dmso.minus", tbl$experiment), grep("dmso.plus", tbl$experiment)))
+   dnapki.mixed <- sort(c(grep("dnapki.minus", tbl$experiment), grep("dnapki.plus", tbl$experiment)))
+   ir.pure <- grep("ir", tbl$experiment)
 
-   save(tbl.123, file="tbl.39analytes.1157x6.RData")
+   group[atmi.pure]  <- "ATMi"
+   group[atmi.mixed] <- "ATMi +/-"
+   group[atri.mixed] <- "ATRi +/-"
+   group[dmso.pure]  <- "DMSO"
+   group[dmso.mixed] <- "DMSO +/-"
+   group[dnapki.mixed] <- "DNAPKI +/-"
+   group[ir.pure] <- "IR"
+
+   stopifnot(length(which(group == "none")) == 0)
+   tbl$group <- group
+   na.area <- which(is.na(tbl$area))
+   na.sd <- which(is.na(tbl$sd))
+   if(length(na.area) > 0)
+       tbl$area[na.area] <- 0
+   if(length(na.sd) > 0)
+       tbl$sd[na.sd] <- 0
+
+   stopifnot(length(which(is.na(tbl$area))) == 0)
+   stopifnot(length(which(is.na(tbl$sd))) == 0)
+
+   save(tbl, file="tbl.39analytes.1157x6.RData")
 
 } # createWebAppReadyDataFrame
 #----------------------------------------------------------------------------------------------------
