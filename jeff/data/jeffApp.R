@@ -8,6 +8,8 @@ library(shinyModules)
 # see 2018 very similar module/shiny app:
 #    https://www.blog.cultureofinsight.com/2018/01/reproducible-shiny-app-development-with-modules/
 #------------------------------------------------------------------------------------------------------------------------
+printf <- function(...) print(noquote(sprintf(...)))
+#------------------------------------------------------------------------------------------------------------------------
 tbl <- get(load("tbl.39analytes.1157x6.RData"))
 analytes <- sort(unique(tbl$analyte))
 
@@ -73,4 +75,4 @@ displayAnalyteDataByExperiment <- function(analyte.name)
 
 } # displayAnalyteDataByExperiment
 #----------------------------------------------------------------------------------------------------
-runApp(shinyApp(ui.dashboard, server), port=9081)
+runApp(shinyApp(ui.dashboard, server), host="0.0.0.0", port=3838)
